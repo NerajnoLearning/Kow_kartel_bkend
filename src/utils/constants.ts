@@ -1,0 +1,70 @@
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_SERVER_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
+} as const;
+
+export const ERROR_CODES = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  AUTHENTICATION_ERROR: 'AUTHENTICATION_ERROR',
+  AUTHORIZATION_ERROR: 'AUTHORIZATION_ERROR',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
+} as const;
+
+export const USER_ROLES = {
+  CUSTOMER: 'customer',
+  ADMIN: 'admin',
+  LOGISTICS: 'logistics',
+} as const;
+
+export const BOOKING_STATUS = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export const PAYMENT_STATUS = {
+  PENDING: 'PENDING',
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED',
+} as const;
+
+export const EQUIPMENT_STATUS = {
+  AVAILABLE: 'AVAILABLE',
+  MAINTENANCE: 'MAINTENANCE',
+  RETIRED: 'RETIRED',
+} as const;
+
+export const RATE_LIMITS = {
+  PUBLIC: { windowMs: 15 * 60 * 1000, max: 100 }, // 100 requests per 15 minutes
+  AUTHENTICATED: { windowMs: 15 * 60 * 1000, max: 1000 }, // 1000 requests per 15 minutes
+  ADMIN: { windowMs: 15 * 60 * 1000, max: 5000 }, // 5000 requests per 15 minutes
+} as const;
+
+export const TOKEN_TYPES = {
+  ACCESS: 'access',
+  REFRESH: 'refresh',
+} as const;
+
+export const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+} as const;

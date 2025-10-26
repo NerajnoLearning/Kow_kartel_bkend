@@ -1,0 +1,41 @@
+{
+  "commercialOven": {
+    "name": "Commercial Convection Oven",
+    "category": "ovens",
+    "description": "Professional grade convection oven for high-volume cooking",
+    "dailyRate": 150,
+    "specifications": {
+      "capacity": "5 full-size pans",
+      "power": "240V",
+      "dimensions": "36\" x 36\" x 72\"",
+      "weight": "450 lbs"
+    },
+    "status": "available"
+  },
+  "industrialFridge": {
+    "name": "Industrial Refrigerator",
+    "category": "refrigeration",
+    "description": "Large capacity commercial refrigerator with digital controls",
+    "dailyRate": 100,
+    "specifications": {
+      "capacity": "48 cubic feet",
+      "temperature": "-5°F to 38°F",
+      "dimensions": "32\" x 30\" x 84\"",
+      "power": "115V"
+    },
+    "status": "available"
+  },
+  "commercialMixer": {
+    "name": "Commercial Stand Mixer",
+    "category": "mixers",
+    "description": "Heavy-duty stand mixer for commercial baking",
+    "dailyRate": 75,
+    "specifications": {
+      "capacity": "20 quarts",
+      "power": "1 HP motor",
+      "speed": "3 speeds",
+      "weight": "150 lbs"
+    },
+    "status": "available"
+  }
+}

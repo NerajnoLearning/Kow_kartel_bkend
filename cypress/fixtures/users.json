@@ -1,0 +1,20 @@
+{
+  "customer": {
+    "name": "Test Customer",
+    "email": "customer@test.com",
+    "password": "Test123!@#",
+    "role": "customer"
+  },
+  "admin": {
+    "name": "Test Admin",
+    "email": "admin@test.com",
+    "password": "Admin123!@#",
+    "role": "admin"
+  },
+  "logistics": {
+    "name": "Test Logistics",
+    "email": "logistics@test.com",
+    "password": "Logistics123!@#",
+    "role": "logistics"
+  }
+}
