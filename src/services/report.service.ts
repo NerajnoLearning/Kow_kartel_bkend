@@ -1,5 +1,8 @@
 import reportRepository from '../repositories/report.repository';
 import { ValidationError } from '../utils/errorHandler';
+import { cacheUtils, cacheKeys } from '../config/redis';
+
+const SHORT_CACHE_TTL = 300; // 5 minutes for frequently changing data
 
 export interface RevenueReportOptions {
   startDate?: Date;
@@ -27,28 +30,34 @@ export class ReportService {
       throw new ValidationError('Start date must be before end date');
     }
 
-    // Get overall revenue stats
-    const stats = await reportRepository.getRevenueStats({
-      startDate,
-      endDate,
-      equipmentId,
-      customerId,
-    });
+    // Create cache key based on options
+    const optionsString = JSON.stringify({ startDate, endDate, equipmentId, customerId, groupBy });
+    const cacheKey = cacheKeys.reports.revenue(optionsString);
 
-    // Get revenue breakdown by date if date range is provided
-    let revenueByDate: any[] = [];
-    if (startDate && endDate) {
-      revenueByDate = await reportRepository.getRevenueByDateRange(
+    return await cacheUtils.getOrSet(cacheKey, SHORT_CACHE_TTL, async () => {
+      // Get overall revenue stats
+      const stats = await reportRepository.getRevenueStats({
         startDate,
         endDate,
-        groupBy || 'day'
-      );
-    }
+        equipmentId,
+        customerId,
+      });
 
-    return {
-      summary: stats,
-      breakdown: revenueByDate,
-    };
+      // Get revenue breakdown by date if date range is provided
+      let revenueByDate: any[] = [];
+      if (startDate && endDate) {
+        revenueByDate = await reportRepository.getRevenueByDateRange(
+          startDate,
+          endDate,
+          groupBy || 'day'
+        );
+      }
+
+      return {
+        summary: stats,
+        breakdown: revenueByDate,
+      };
+    });
   }
 
   /**
@@ -68,13 +77,15 @@ export class ReportService {
       throw new ValidationError('Date range cannot exceed 1 year');
     }
 
-    const utilization = await reportRepository.getEquipmentUtilization({
-      startDate,
-      endDate,
-      equipmentId,
-    });
+    const cacheKey = cacheKeys.reports.utilization();
 
-    return utilization;
+    return await cacheUtils.getOrSet(cacheKey, SHORT_CACHE_TTL, async () => {
+      return await reportRepository.getEquipmentUtilization({
+        startDate,
+        endDate,
+        equipmentId,
+      });
+    });
   }
 
   /**
@@ -126,7 +137,11 @@ export class ReportService {
    * Get dashboard summary for admin
    */
   async getDashboardSummary() {
-    return await reportRepository.getDashboardSummary();
+    const cacheKey = cacheKeys.reports.dashboard();
+
+    return await cacheUtils.getOrSet(cacheKey, SHORT_CACHE_TTL, async () => {
+      return await reportRepository.getDashboardSummary();
+    });
   }
 
   /**

@@ -2,6 +2,10 @@ import { equipmentRepository } from '../repositories';
 import { IEquipment, EquipmentStatus } from '../models/equipment.model';
 import { NotFoundError, ValidationError } from '../utils/errorHandler';
 import { EquipmentFilters, PaginationOptions } from '../repositories/equipment.repository';
+import { cacheUtils, cacheKeys } from '../config/redis';
+import env from '../config/env';
+
+const CACHE_TTL = parseInt(env.REDIS_TTL, 10);
 
 export interface CreateEquipmentData {
   name: string;
@@ -38,15 +42,31 @@ export class EquipmentService {
       specifications: data.specifications || {},
     });
 
+    // Invalidate equipment list cache
+    await cacheUtils.delPattern('equipment:list:*');
+    await cacheUtils.delPattern('equipment:categories');
+
     return equipment;
   }
 
   async getEquipmentById(id: string): Promise<IEquipment> {
+    // Try cache first
+    const cacheKey = cacheKeys.equipment.detail(id);
+    const cached = await cacheUtils.getJSON<IEquipment>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    // Fetch from database
     const equipment = await equipmentRepository.findById(id);
 
     if (!equipment) {
       throw new NotFoundError('Equipment not found');
     }
+
+    // Cache the result
+    await cacheUtils.setJSON(cacheKey, equipment, CACHE_TTL);
 
     return equipment;
   }
@@ -55,7 +75,29 @@ export class EquipmentService {
     filters: EquipmentFilters = {},
     options: PaginationOptions = {}
   ): Promise<{ data: IEquipment[]; total: number; page: number; totalPages: number }> {
-    return await equipmentRepository.findAll(filters, options);
+    // Create cache key from filters and options
+    const filterString = JSON.stringify({ filters, options });
+    const cacheKey = cacheKeys.equipment.list(filterString);
+
+    // Try cache first
+    const cached = await cacheUtils.getJSON<{
+      data: IEquipment[];
+      total: number;
+      page: number;
+      totalPages: number;
+    }>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    // Fetch from database
+    const result = await equipmentRepository.findAll(filters, options);
+
+    // Cache the result
+    await cacheUtils.setJSON(cacheKey, result, CACHE_TTL);
+
+    return result;
   }
 
   async updateEquipment(id: string, data: UpdateEquipmentData): Promise<IEquipment> {
@@ -72,6 +114,14 @@ export class EquipmentService {
 
     // Update equipment
     const updatedEquipment = await equipmentRepository.updateById(id, data);
+
+    // Invalidate cache
+    await cacheUtils.delPattern(`equipment:detail:${id}`);
+    await cacheUtils.delPattern('equipment:list:*');
+    if (data.category) {
+      await cacheUtils.delPattern('equipment:categories');
+    }
+
     return updatedEquipment;
   }
 
@@ -89,6 +139,11 @@ export class EquipmentService {
     // }
 
     await equipmentRepository.deleteById(id);
+
+    // Invalidate cache
+    await cacheUtils.delPattern(`equipment:detail:${id}`);
+    await cacheUtils.delPattern('equipment:list:*');
+    await cacheUtils.delPattern('equipment:categories');
   }
 
   async updateEquipmentStatus(id: string, status: EquipmentStatus): Promise<IEquipment> {
@@ -97,7 +152,13 @@ export class EquipmentService {
       throw new NotFoundError('Equipment not found');
     }
 
-    return await equipmentRepository.updateById(id, { status });
+    const updated = await equipmentRepository.updateById(id, { status });
+
+    // Invalidate cache
+    await cacheUtils.delPattern(`equipment:detail:${id}`);
+    await cacheUtils.delPattern('equipment:list:*');
+
+    return updated;
   }
 
   async addEquipmentImages(id: string, imageUrls: string[]): Promise<IEquipment> {
@@ -109,7 +170,12 @@ export class EquipmentService {
     // Append new images to existing ones
     const updatedImageUrls = [...equipment.imageUrls, ...imageUrls];
 
-    return await equipmentRepository.updateById(id, { imageUrls: updatedImageUrls });
+    const updated = await equipmentRepository.updateById(id, { imageUrls: updatedImageUrls });
+
+    // Invalidate cache
+    await cacheUtils.delPattern(`equipment:detail:${id}`);
+
+    return updated;
   }
 
   async removeEquipmentImage(id: string, imageUrl: string): Promise<IEquipment> {
@@ -124,11 +190,20 @@ export class EquipmentService {
     // TODO: Delete image from S3
     // await s3Service.deleteFile(imageUrl);
 
-    return await equipmentRepository.updateById(id, { imageUrls: updatedImageUrls });
+    const updated = await equipmentRepository.updateById(id, { imageUrls: updatedImageUrls });
+
+    // Invalidate cache
+    await cacheUtils.delPattern(`equipment:detail:${id}`);
+
+    return updated;
   }
 
   async getCategories(): Promise<string[]> {
-    return await equipmentRepository.getCategories();
+    const cacheKey = cacheKeys.equipment.categories();
+
+    return await cacheUtils.getOrSet(cacheKey, CACHE_TTL, async () => {
+      return await equipmentRepository.getCategories();
+    });
   }
 
   async searchEquipment(

@@ -14,7 +14,8 @@
 - ✅ **MongoDB with Mongoose** for data persistence
 - ✅ **Role-Based Access Control** (Customer, Admin, Logistics)
 - ✅ **Comprehensive Test Suite** with Cypress (replaced Jest)
-- ⏳ **Remaining:** Email notifications (BullMQ), Redis caching, API documentation (Swagger)
+- ✅ **Redis Caching & Rate Limiting** for performance and security
+- ⏳ **Remaining:** Email notifications (BullMQ), API documentation (Swagger)
 
 ## Project Overview
 
@@ -211,7 +212,7 @@ kitchenonwheels-backend/
 │   ├── config/                       # Configuration files
 │   │   ├── ✅ env.ts                 # Environment variables with Zod validation
 │   │   ├── ✅ db.ts                  # MongoDB/Mongoose connection setup
-│   │   ├── ⏳ redis.ts               # Redis connection (planned)
+│   │   ├── ✅ redis.ts               # Redis connection with cache utilities
 │   │   └── ✅ logger.ts              # Winston logger setup
 │   │
 │   ├── routes/                       # Express routers
@@ -233,10 +234,10 @@ kitchenonwheels-backend/
 │   │
 │   ├── services/                     # Business logic
 │   │   ├── ✅ auth.service.ts        # JWT, password reset, verification
-│   │   ├── ✅ equipment.service.ts   # Equipment management with S3
+│   │   ├── ✅ equipment.service.ts   # Equipment management with S3 + Redis caching
 │   │   ├── ✅ booking.service.ts     # Conflict detection, pricing logic
 │   │   ├── ✅ payment.service.ts     # Stripe integration, webhooks
-│   │   ├── ✅ report.service.ts      # Analytics and reporting logic
+│   │   ├── ✅ report.service.ts      # Analytics and reporting logic + Redis caching
 │   │   └── ✅ customer.service.ts    # Customer profile and statistics
 │   │
 │   ├── repositories/                 # Data access via Mongoose models
@@ -271,13 +272,13 @@ kitchenonwheels-backend/
 │   ├── middlewares/
 │   │   ├── ✅ auth.middleware.ts     # JWT verification
 │   │   ├── ✅ error.middleware.ts    # Global error handler
-│   │   ├── ⏳ rateLimit.middleware.ts # Redis-backed rate limiting (planned)
+│   │   ├── ✅ rateLimit.middleware.ts # Redis-backed rate limiting
 │   │   ├── ✅ validate.middleware.ts # Zod schema validation
 │   │   ├── ✅ role.middleware.ts     # Role-based authorization
 │   │   └── ✅ upload.middleware.ts   # Multer file upload configuration
 │   │
 │   ├── utils/
-│   │   ├── ⏳ constants.ts           # (planned)
+│   │   ├── ✅ constants.ts           # HTTP status codes, rate limits, etc.
 │   │   ├── ✅ errorHandler.ts        # Custom error classes
 │   │   ├── ✅ jwt.ts                 # JWT sign/verify utilities
 │   │   ├── ✅ fileUpload.ts          # AWS S3 upload service
