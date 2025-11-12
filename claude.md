@@ -6,16 +6,16 @@
 
 **Completion Summary:**
 - ✅ **6 Core Modules Complete** (Auth, Equipment, Bookings, Payments, Reports, Customers)
-- ✅ **52 API Endpoints** fully implemented and tested
+- ✅ **55+ API Endpoints** fully implemented (52 + 3 Clerk endpoints)
+- ✅ **Clerk Authentication** with webhooks and user sync
 - ✅ **75+ E2E API Tests** with Cypress
 - ✅ **WebSocket Real-time Updates** for bookings and payments
 - ✅ **Stripe Payment Integration** with webhooks
 - ✅ **AWS S3 File Uploads** for equipment images
 - ✅ **MongoDB with Mongoose** for data persistence
 - ✅ **Role-Based Access Control** (Customer, Admin, Logistics)
-- ✅ **Comprehensive Test Suite** with Cypress (replaced Jest)
 - ✅ **Redis Caching & Rate Limiting** for performance and security
-- ⏳ **Remaining:** Email notifications (BullMQ), API documentation (Swagger)
+- ⏳ **Remaining:** Email notifications (BullMQ), API documentation (Swagger), Update tests for Clerk
 
 ## Project Overview
 
@@ -45,7 +45,7 @@ KitchenOnWheels Rentals Backend is the core API and data layer powering the Kitc
 | Framework | Express.js | Express.js 5 | Express.js 5 | The minimal and widely-used framework for Node.js APIs. |
 | Database | MongoDB (NoSQL) | PostgreSQL 14+ (Relational) | MongoDB | Using MongoDB with Mongoose ODM for flexible schema design and rapid development. |
 | ORM/ODM | Mongoose ODM (for MongoDB) | Prisma ORM (for PostgreSQL) | Mongoose ODM | Mongoose provides a schema-based solution for MongoDB with built-in validation and middleware. |
-| Authentication | JWT (Standard API practice) | JWT + Refresh Tokens | JWT + Refresh Tokens | Standard practice for secure stateless authentication. |
+| Authentication | JWT (Standard API practice) | JWT + Refresh Tokens | **Clerk** (with JWT legacy support) | Modern authentication platform with built-in user management, OAuth, and security features. |
 | Validation | Basic Validation | Zod | Zod | Powerful, TypeScript-first schema validation. |
 | Caching/State | (General Caching) | Redis (for sessions & rate limiting) | Redis | Essential for scaling and managing sessions/limits. |
 | File Storage | (General Cloud Storage) | AWS S3 (via aws-sdk) | AWS S3 | Industry-standard cloud object storage. |
@@ -199,6 +199,44 @@ The backend follows a Clean Architecture structure with the following layers:
 - ✅ Pagination and sorting
 - ⏳ Loyalty and referral tracking (planned)
 
+### ✅ Clerk Authentication (COMPLETED)
+
+**Endpoints:**
+- `POST /api/v1/webhooks/clerk` - Clerk webhook handler (user.created, user.updated, user.deleted)
+- `GET /api/v1/auth/me` - Get current authenticated user
+- `PATCH /api/v1/auth/metadata` - Update user metadata (role, phone, address)
+
+**Features:**
+- ✅ Clerk SDK integration (@clerk/backend, @clerk/clerk-sdk-node)
+- ✅ Session token verification via Clerk
+- ✅ Webhook signature validation (svix)
+- ✅ Automatic user sync (create/update/delete)
+- ✅ Role-based access via Clerk publicMetadata
+- ✅ User metadata management (phone, address)
+- ✅ Seamless OAuth support (Google, GitHub, etc.)
+- ✅ Legacy JWT support for backward compatibility
+
+**Authentication Flow:**
+1. Frontend authenticates with Clerk (handles OAuth, email/password, MFA)
+2. Clerk issues session token
+3. Frontend sends token in `Authorization: Bearer <token>` header
+4. Backend verifies token with Clerk SDK
+5. User data attached to request from Clerk + local database
+6. Role-based access control via publicMetadata
+
+**Webhook Flow:**
+1. User signs up/updates profile in Clerk
+2. Clerk sends webhook to `/api/v1/webhooks/clerk`
+3. Backend verifies webhook signature
+4. User created/updated in local MongoDB database
+5. User data synced with Clerk metadata
+
+**Migration Strategy:**
+- ✅ Clerk authentication is primary method
+- ✅ Legacy JWT authentication maintained for backward compatibility
+- ✅ User model updated with `clerkId` field
+- ⏳ Gradual migration of existing users to Clerk
+
 ## Project Structure
 
 Legend: ✅ = Completed | ⏳ = Planned/Not Started
@@ -213,10 +251,12 @@ kitchenonwheels-backend/
 │   │   ├── ✅ env.ts                 # Environment variables with Zod validation
 │   │   ├── ✅ db.ts                  # MongoDB/Mongoose connection setup
 │   │   ├── ✅ redis.ts               # Redis connection with cache utilities
+│   │   ├── ✅ clerk.ts               # Clerk authentication configuration
 │   │   └── ✅ logger.ts              # Winston logger setup
 │   │
 │   ├── routes/                       # Express routers
-│   │   ├── ✅ auth.routes.ts         # Authentication routes
+│   │   ├── ✅ auth.routes.ts         # Authentication routes (legacy)
+│   │   ├── ✅ clerk.routes.ts        # Clerk webhooks and auth endpoints
 │   │   ├── ✅ equipment.routes.ts    # Equipment management routes
 │   │   ├── ✅ booking.routes.ts      # Booking management routes
 │   │   ├── ✅ payment.routes.ts      # Payment processing routes
@@ -225,7 +265,8 @@ kitchenonwheels-backend/
 │   │   └── ✅ index.ts               # Main router combining all routes
 │   │
 │   ├── controllers/                  # Route handlers
-│   │   ├── ✅ auth.controller.ts     # 9 endpoints (register, login, refresh, etc.)
+│   │   ├── ✅ auth.controller.ts     # 9 endpoints (register, login, refresh, etc.) - legacy
+│   │   ├── ✅ clerk.controller.ts    # 3 endpoints (webhook, profile, metadata)
 │   │   ├── ✅ equipment.controller.ts # 11 endpoints (CRUD, search, images)
 │   │   ├── ✅ booking.controller.ts  # 10 endpoints (CRUD, lifecycle management)
 │   │   ├── ✅ payment.controller.ts  # 7 endpoints (intent, webhook, refunds)
@@ -233,7 +274,8 @@ kitchenonwheels-backend/
 │   │   └── ✅ customer.controller.ts # 8 endpoints (profile, stats, history)
 │   │
 │   ├── services/                     # Business logic
-│   │   ├── ✅ auth.service.ts        # JWT, password reset, verification
+│   │   ├── ✅ auth.service.ts        # JWT, password reset, verification (legacy)
+│   │   ├── ✅ clerk.service.ts       # Clerk webhook handling and user sync
 │   │   ├── ✅ equipment.service.ts   # Equipment management with S3 + Redis caching
 │   │   ├── ✅ booking.service.ts     # Conflict detection, pricing logic
 │   │   ├── ✅ payment.service.ts     # Stripe integration, webhooks
@@ -250,7 +292,7 @@ kitchenonwheels-backend/
 │   │   └── ✅ index.ts               # Repository exports
 │   │
 │   ├── models/                       # Mongoose schemas and models
-│   │   ├── ✅ user.model.ts          # User schema with bcrypt hooks
+│   │   ├── ✅ user.model.ts          # User schema with clerkId and bcrypt hooks
 │   │   ├── ✅ equipment.model.ts     # Equipment schema with enums
 │   │   ├── ✅ booking.model.ts       # Booking schema with references
 │   │   └── ✅ payment.model.ts       # Payment schema with Stripe metadata
@@ -259,7 +301,7 @@ kitchenonwheels-backend/
 │   │   ├── ⏳ auth.types.ts          # (types defined inline in services)
 │   │   ├── ⏳ booking.types.ts       # (types defined inline in services)
 │   │   ├── ⏳ equipment.types.ts     # (types defined inline in services)
-│   │   └── ⏳ common.types.ts        # (planned)
+│   │   └── ✅ common.types.ts        # ClerkUser, AuthRequest, QueryParams
 │   │
 │   ├── validators/                   # Zod validation schemas
 │   │   ├── ✅ auth.schema.ts         # Login, register, password reset schemas
@@ -270,7 +312,7 @@ kitchenonwheels-backend/
 │   │   └── ✅ report.schema.ts       # Report query parameter schemas
 │   │
 │   ├── middlewares/
-│   │   ├── ✅ auth.middleware.ts     # JWT verification
+│   │   ├── ✅ auth.middleware.ts     # Clerk + legacy JWT verification
 │   │   ├── ✅ error.middleware.ts    # Global error handler
 │   │   ├── ✅ rateLimit.middleware.ts # Redis-backed rate limiting
 │   │   ├── ✅ validate.middleware.ts # Zod schema validation

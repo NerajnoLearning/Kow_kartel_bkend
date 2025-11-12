@@ -15,11 +15,16 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   REDIS_TTL: z.string().default('3600'),
 
-  // JWT
-  JWT_SECRET: z.string().min(32),
+  // JWT (Legacy - being replaced by Clerk)
+  JWT_SECRET: z.string().min(32).optional(),
   JWT_EXPIRES_IN: z.string().default('15m'),
-  REFRESH_TOKEN_SECRET: z.string().min(32),
+  REFRESH_TOKEN_SECRET: z.string().min(32).optional(),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
+
+  // Clerk Authentication
+  CLERK_PUBLISHABLE_KEY: z.string().min(1, 'CLERK_PUBLISHABLE_KEY is required'),
+  CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEY is required'),
+  CLERK_WEBHOOK_SECRET: z.string().min(1, 'CLERK_WEBHOOK_SECRET is required'),
 
   // AWS S3
   AWS_REGION: z.string().optional(),

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import clerkRoutes from './clerk.routes';
 import equipmentRoutes from './equipment.routes';
 import bookingRoutes from './booking.routes';
 import paymentRoutes from './payment.routes';
@@ -10,6 +11,7 @@ const router = Router();
 
 // Mount routes
 router.use('/auth', authRoutes);
+router.use('/', clerkRoutes); // Clerk webhooks and auth endpoints
 router.use('/equipment', equipmentRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/payments', paymentRoutes);
